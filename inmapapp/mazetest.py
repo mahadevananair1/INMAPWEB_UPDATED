@@ -3,8 +3,8 @@ import time,os
 floor1checkpoint = {"kitchen-1st floor":(138, 23), "bedroom1-1st floor":(48, 24), "empty-1st floor":(59, 41), "bath-1st floor":(31, 44), "stairentry-1st floor":(106, 45), "bath2-1st floor":(58, 50), "room-1st floor":(188, 50),"stairexit-1st floor":(106, 53),"familyroom-1st floor":(63, 67), "formaldinnning-1st floor":(100, 68),"office-1st floor":(139, 71), "exit-1st floor":(79, 76)}
 # this is for the second floor
 floor2checkpoint = {"bedroom1-2nd floor":(56,24), "familyroom-2nd floor":(119, 37), "bath-2nd floor":(32, 45), "stairentry-2nd floor":(143, 45), "empty-2nd floor":(73, 51),"stairexit-2nd floor":(142, 51), "bedroom3-2nd floor":(146, 62),"bedroom2-2nd floor":(74, 63),"bathroom-2nd floor":(107, 72)}
-floor1 = floor1checkpoint.keys()
-floor2 = floor2checkpoint.keys()
+floor1 = floor1checkpoint.values()
+floor2 = floor2checkpoint.values()
 class Node():
     def __init__(self, state, parent, action):
         self.state = state
@@ -197,7 +197,7 @@ class Maze():
         # )
         # img = Image.open("indoor_map.png")
         # draw = ImageDraw.Draw(img)
-
+        checkpointlist = []
         solution = self.solution[1] if self.solution is not None else None
         for i, row in enumerate(self.walls):
             for j, col in enumerate(row):
@@ -206,10 +206,7 @@ class Maze():
                 if col:
                     # fill = (40, 40, 40)
                     continue
-                if (j,i) in floor1:
-                    fill = (255, 255, 255)
-                if (j,i) in floor2:
-                    fill = (255,0, 255)
+                
                 # Start
                 elif (i, j) == self.start:
                     fill = (255, 0, 0)
@@ -221,6 +218,7 @@ class Maze():
                 # Solution
                 elif solution is not None and show_solution and (i, j) in solution:
                     # print(i,j,f'{self.imagename}')
+                    checkpointlist.append((i,j))
                     fill = (0, 225, 50)
 
                 # Explored
@@ -242,13 +240,27 @@ class Maze():
                 # /home/sooraj/Documents/PROJECTS/INMAPWEBV2.0/inmapproject/inmapapp/templates/inmapapp/index.html
                 cv.circle(base_img,(round(j*4.2),round(i*4.7)),1,fill,5)
         # print(f"for image{self.imagename}")
-        self.frontier = []
-        self.explored = set()
-        self.solution = None
-        self.num_explored = 0
+        print(checkpointlist)
+        for checkpoints in checkpointlist:    
+            for points in floor1:
+                x_distance = abs(checkpoints[1]-points[0])
+                y_distance = abs(checkpoints[0]-points[1])
+                if x_distance<=2 and y_distance<=2:
+                    print(f"checkpoint{checkpoints} is near to point{points} of floor1")
+                    cv.circle(base_img,(round(checkpoints[1]*4.2),round(checkpoints[0]*4.7)),1,(0,0,255),5)       
+            for points in floor2:
+                x_distance = abs(checkpoints[1]-points[0])
+                y_distance = abs(checkpoints[0]-points[1])
+                if x_distance<=2 and y_distance<=2:
+                    print(f"checkpoint{checkpoints} is near to point{points} of floor2")
+                    cv.circle(base_img,(round(checkpoints[1]*4.2),round(checkpoints[0]*4.7)),1,(0,0,255),5)
+                    
+
+
 
         cv.imwrite(os.path.abspath(f'inmapapp/static/inmapapp/mod{self.imagename}'),base_img)
-        
+
+
         # img.save(filename)
 
 

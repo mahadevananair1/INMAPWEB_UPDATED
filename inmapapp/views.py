@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from .forms import MyModelForm
 from .mazetest import Maze
 import time,os
@@ -12,47 +12,66 @@ floor1checkpoint = {"kitchen-1st floor":(138, 23), "bedroom1-1st floor":(48, 24)
 # this is for the second floor
 floor2checkpoint = {"bedroom1-2nd floor":(56,24), "familyroom-2nd floor":(119, 37), "bath-2nd floor":(32, 45), "stairentry-2nd floor":(143, 45), "empty-2nd floor":(73, 51),"stairexit-2nd floor":(142, 51), "bedroom3-2nd floor":(146, 62),"bedroom2-2nd floor":(74, 63),"bathroom-2nd floor":(107, 72)}
 floors = [floor1checkpoint,floor2checkpoint]
+floor1 = False
+floor2 = False
 # Create your views here.
 def index(request):
     if request.method == "GET":
-        form = MyModelForm()
-        return render(request,'inmapapp/index.html',{"form":form,'image':"inmapapp/MAP.png",'time':'','update':False})    
+        return render(request,'inmapapp/index.html',{'image':"inmapapp/MAP.png",'time':'','update':False})    
     else:
-        form = MyModelForm(request.POST)
-        if form.is_valid():
-            then = time.time()
-            From = form.cleaned_data['From']
-            To = form.cleaned_data['To']
-            if From in floor1checkpoint and To in floor1checkpoint:
-                From_x,From_y = floor1checkpoint[form.cleaned_data['From']]
-                To_x,To_y = floor1checkpoint[form.cleaned_data['To']]
-                m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor1.txt'),From_x,From_y,To_x,To_y,"floor1.png")
-                m.solve()
-                m.output_image()
-            if From in floor2checkpoint and To in floor2checkpoint:
-                From_x,From_y = floor2checkpoint[form.cleaned_data['From']]
-                To_x,To_y = floor2checkpoint[form.cleaned_data['To']]
-                m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor2.txt'),From_x,From_y,To_x,To_y,"floor2.png")
-                m.solve()
-                m.output_image()
-            if From in floor1checkpoint and To in floor2checkpoint:
-                From_x,From_y = floor1checkpoint[form.cleaned_data['From']]
-                To_x,To_y = floor2checkpoint[form.cleaned_data['To']]
-                m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor1.txt'),From_x,From_y,106,53,"floor1.png")
-                m.solve()
-                m.output_image()
-                n = Maze(os.path.abspath('inmapapp/static/inmapapp/floor2.txt'),143,45,To_x,To_y,"floor2.png")
-                n.solve()
-                n.output_image()
-            if From in floor2checkpoint and To in floor1checkpoint:
-                From_x,From_y = floor2checkpoint[form.cleaned_data['From']]
-                To_x,To_y = floor1checkpoint[form.cleaned_data['To']]
-                m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor2.txt'),From_x,From_y,142,51,"floor2.png")
-                m.solve()
-                m.output_image()
-                n = Maze(os.path.abspath('inmapapp/static/inmapapp/floor1.txt'),106,45,To_x,To_y,"floor1.png")
-                n.solve()
-                n.output_image()
+        then = time.time()
+        FromAuto = request.POST.get('fromLocation')
+        ToAuto = request.POST.get('To')
+        FromMan = request.POST.get('manualFrom')
+        ToMan = request.POST.get('manualTo')
+        if FromAuto and ToAuto:
+            From = FromAuto
+            To = ToAuto
+        else:
+            From = FromMan
+            To = ToMan
+        if From in floor1checkpoint and To in floor1checkpoint:
+            From_x,From_y = floor1checkpoint[From]
+            To_x,To_y = floor1checkpoint[To]
+            m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor1.txt'),From_x,From_y,To_x,To_y,"floor1.png")
+            m.solve()
+            m.output_image()
+            floor1 = True
+            floor2 = False
+            return render(request,'inmapapp/result.html',{'floor1':floor1,'floor2':floor2,'time':time.time()-then,'update':True})
+        if From in floor2checkpoint and To in floor2checkpoint:
+            From_x,From_y = floor2checkpoint[From]
+            To_x,To_y = floor2checkpoint[To]
+            m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor2.txt'),From_x,From_y,To_x,To_y,"floor2.png")
+            m.solve()
+            m.output_image()
+            floor1=False
+            floor2 = True
+            return render(request,'inmapapp/result.html',{'floor1':floor1,'floor2':floor2,'time':time.time()-then,'update':True})
+        if From in floor1checkpoint and To in floor2checkpoint:
+            From_x,From_y = floor1checkpoint[From]
+            To_x,To_y = floor2checkpoint[To]
+            m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor1.txt'),From_x,From_y,106,53,"floor1.png")
+            m.solve()
+            m.output_image()
+            n = Maze(os.path.abspath('inmapapp/static/inmapapp/floor2.txt'),143,45,To_x,To_y,"floor2.png")
+            n.solve()
+            n.output_image()
+            floor1=True
+            floor2=True
+            return render(request,'inmapapp/result.html',{'floor1':floor1,'floor2':floor2,'time':time.time()-then,'update':True})
+        if From in floor2checkpoint and To in floor1checkpoint:
+            From_x,From_y = floor2checkpoint[From]
+            To_x,To_y = floor1checkpoint[To]
+            m = Maze(os.path.abspath('inmapapp/static/inmapapp/floor2.txt'),From_x,From_y,142,51,"floor2.png")
+            m.solve()
+            m.output_image()
+            n = Maze(os.path.abspath('inmapapp/static/inmapapp/floor1.txt'),106,45,To_x,To_y,"floor1.png")
+            n.solve()
+            n.output_image()
+            floor1=True
+            floor2=True
+            return render(request,'inmapapp/result.html',{'floor1':floor1,'floor2':floor2,'time':time.time()-then,'update':True})
             # print(From_x,From_y,To_x,To_y)
             
             # /home/sooraj/Documents/PROJECTS/INMAPWEB/inmapproject/inmapapp/static/inmapapp/map.txt
@@ -65,12 +84,23 @@ def index(request):
             # # print("Solution:")
             # m.print()
             # m.output_image()
-            now = time.time()
-            return render(request,'inmapapp/index.html',{"form":form,'image':"inmapapp/result.png","time":now-then,"update":True})       
-        else:
-            return render(request,'inmapapp/index.html')
+        now = time.time()   
+        return render(request,'inmapapp/index.html',{'image':"inmapapp/result.png","time":now-then,"update":True})       
+        
+def result(request):
+    return render(request,'inmapapp/result.html')
+
 def sample(request):
     ans=""
     for sol in sols:
-        ans+=f'''<div style="width:10px;height:10px;border:5px solid black;position: absolute;top: {sol[1]}px;left: {sol[0]}px;"> </div>'''
+        ans+=f'''<div style="width:10px;height:10px;border:5px solid black;position: absolute;top: {sol[1]*4.2}px;left: {sol[0]*4.7}px;"> </div>'''
     return render(request,'inmapapp/sample.html',{"data":ans})
+def test(request):
+    From = request.POST.get('fromLocation')
+    To = request.POST.get('To')
+    FromMan = request.POST.get('manualFrom')
+    ToMan = request.POST.get('manualTo')
+    print(From,To)
+    print(FromMan,ToMan)
+    
+    return render(request,'inmapapp/prev_index.html')
